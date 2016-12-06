@@ -6,15 +6,14 @@ import(
 	"os"
   	"strconv"
   	"net/http"
-  	"io/ioutil"
   	"crypto/tls"
   	"net/url"
   	"net/http/cookiejar"
-  	"strings"
   	"net/smtp"
   	"net/mail"
   	"fmt"
   	"net"
+  	"time"
 )
 
 const(
@@ -77,23 +76,14 @@ func init_cookie() {
 	u, _ := url.Parse("https://kyfw.12306.cn/otn/lcxxcx/query?purpose_codes=ADULT&queryDate=2016-12-30&from_station=HGH&to_station=NHH")
 	cJar.SetCookies(u, cookies)
 }
-func getHtml() string{
-	tr := &http.Transport{
-        TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-    }
-	client := &http.Client{Transport: tr,Jar: cJar}
-    resp, err := client.Get("https://kyfw.12306.cn/otn/lcxxcx/query?purpose_codes=ADULT&queryDate=2016-12-30&from_station=HGH&to_station=NHH")
-    checkErr(err)
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	checkErr(err)
-	return string(body)
-}
+
 
 func main() {
 	defer client.Quit()
-	html:=getHtml()
-	date:=getDate(html)
+	//html:=getHtml()
+	//fmt.Println(html)
+	date:=getDate()
+	fmt.Println(date)
 	email_user,err:=client.Get(email_user_key)
 	checkErr(err)
 	email_password,err:=client.Get(email_password_key)
@@ -106,10 +96,10 @@ func main() {
 	SendToMail(email_user,email_password,email_host,email_to,email_subject,body,"")
 	log.Println("finished")
 }
-func getDate(html string) string{
-	key:="\"note\":\"暂售至<br/>"
-	index:=strings.Index(html,key)
-	return html[index+len(key):index+len(key)+10]
+func getDate() string{
+	now := time.Now()
+	next:= now.AddDate( 0, 0, 29 )
+	return next.Format("2006年01月02日")
 }
 
 func SendToMail(fromAddr string, password string, servername string, toAddrs []string, subj string, body string, mailtype string) {
